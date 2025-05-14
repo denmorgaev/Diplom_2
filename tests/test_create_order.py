@@ -19,8 +19,10 @@ class TestCreateOrder:
     def test_create_order_whith_auth(self, create_new_user):
         token = create_new_user[1].json()["accessToken"]
         headers = {'Authorization': token}
-        response = requests.post(URL.main_url + Endpoints.CREATE_ORDER, headers=headers, data=Ingredients.correct_ingredients_data)
-        assert response.status_code == StatusCode.OK and response.json().get("success") == True
+        with allure.step("Отправить POST-запрос на создание заказа с авторизацией"):
+            response = requests.post(URL.main_url + Endpoints.CREATE_ORDER, headers=headers, data=Ingredients.correct_ingredients_data)
+        with allure.step("Проверить, что заказ успешно создан"):
+            assert response.status_code == StatusCode.OK and response.json().get("success") is True
 
     @allure.title('Проверка создания заказа без авторизации')
     @allure.description('''
@@ -28,8 +30,10 @@ class TestCreateOrder:
                         2. Проверяем ответ;
                         ''')
     def test_create_order_without_auth(self):
-        response = requests.post(URL.main_url + Endpoints.CREATE_ORDER, data=Ingredients.correct_ingredients_data)
-        assert response.status_code == StatusCode.OK and response.json().get("success") == True
+        with allure.step("Отправить POST-запрос на создание заказа без авторизации"):
+            response = requests.post(URL.main_url + Endpoints.CREATE_ORDER, data=Ingredients.correct_ingredients_data)
+        with allure.step("Проверить, что заказ успешно создан без авторизации"):
+            assert response.status_code == StatusCode.OK and response.json().get("success") is True
 
     @allure.title('Проверка создания заказа авторизованным пользователем без передачи ингредиентов')
     @allure.description('''
@@ -41,8 +45,14 @@ class TestCreateOrder:
     def test_create_order_whithout_ingredients(self, create_new_user):
         token = create_new_user[1].json()["accessToken"]
         headers = {'Authorization': token}
-        response = requests.post(URL.main_url + Endpoints.CREATE_ORDER, headers=headers, data=Ingredients.incorrect_ingredients_data_without_filling)
-        assert response.status_code == StatusCode.BAD_REQUEST and response.json().get("success") == False
+        with allure.step("Отправить POST-запрос на создание заказа без ингредиентов"):
+            response = requests.post(
+                URL.main_url + Endpoints.CREATE_ORDER,
+                headers=headers,
+                data=Ingredients.incorrect_ingredients_data_without_filling
+            )
+        with allure.step("Проверить, что заказ не был создан и вернулся статус 400"):
+            assert response.status_code == StatusCode.BAD_REQUEST and response.json().get("success") is False
 
     @allure.title('Проверка создания заказа авторизованным пользователем с невалидным хэшем')
     @allure.description('''
@@ -54,5 +64,11 @@ class TestCreateOrder:
     def test_create_order_incorrect_hash(self, create_new_user):
         token = create_new_user[1].json()["accessToken"]
         headers = {'Authorization': token}
-        response = requests.post(URL.main_url + Endpoints.CREATE_ORDER, headers=headers, data=Ingredients.incorrect_ingredients_data_hash)
-        assert response.status_code == StatusCode.INTERNAL_SERVER_ERROR and TextResponse.SERVER_ERROR in response.text
+        with allure.step("Отправить POST-запрос на создание заказа с невалидным хэшем ингредиента"):
+            response = requests.post(
+                URL.main_url + Endpoints.CREATE_ORDER,
+                headers=headers,
+                data=Ingredients.incorrect_ingredients_data_hash
+            )
+        with allure.step("Проверить, что сервер вернул ошибку 500 и сообщение об ошибке присутствует"):
+            assert response.status_code == StatusCode.INTERNAL_SERVER_ERROR and TextResponse.SERVER_ERROR in response.text

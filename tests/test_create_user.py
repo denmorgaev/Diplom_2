@@ -16,9 +16,10 @@ class TestCreateUser:
                         2. Проверяем ответ;
                         3. Удаляем пользователя.
                         ''')
-    def test_create_user(self, create_new_user):
-        response = create_new_user
-        assert response[1].json().get("success") == True and response[1].status_code == StatusCode.OK
+    def test_create_user(self):
+        payload = Person.create_data_user()  # Предположим, что этот метод генерирует данные пользователя
+        response = requests.post(URL.main_url + Endpoints.CREATE_USER, data=payload)
+        assert response.json().get("success") == True and response.status_code == StatusCode.OK
 
     @allure.title('Проверка создания дублирующего пользователя')
     @allure.description('''
@@ -28,9 +29,9 @@ class TestCreateUser:
                         4. Проверяем ответ;
                         5. Удаляем пользователя.
                         ''')
-    def test_create_double_user(self, create_new_user):
-        response = create_new_user
-        payload = response[0]
+    def test_create_double_user(self):
+        payload = Person.create_data_user()  # Создаём пользователя для теста
+        response = requests.post(URL.main_url + Endpoints.CREATE_USER, data=payload)
         response_double_register = requests.post(URL.main_url + Endpoints.CREATE_USER, data=payload)
         assert response_double_register.status_code == StatusCode.FORBIDDEN and (
             response_double_register.json().get("message") == TextResponse.CREATE_DOUBLE_USER
